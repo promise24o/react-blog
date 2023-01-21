@@ -16,16 +16,14 @@ class AuthController extends Controller
         $credentials = $request->validated();
         if (!Auth::attempt($credentials)) {
             return response([
-                'message' => 'Invalid Email Address or Password',
-            ]);
+                'message' => 'Provided email or password is incorrect'
+            ], 422);
         }
 
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $token = $user->createToken('main')->plainTextToken;
-        return response([
-            'user' => $user,
-            'token' => $token
-        ]);
+        return response(compact('user', 'token'));
     }
     public function register(RegisterRequest $request)
     {

@@ -1,9 +1,61 @@
-import React from 'react'
+import React, { createRef, useState } from 'react'
 import { Link } from 'react-router-dom';
+import { useStateContext } from '../context/ContextProvider';
+import axiosClient from '../axios-client';
+import { toast } from 'react-toastify';
 
 export default function Login() {
+
+    const emailRef = createRef()
+    const passwordRef = createRef()
+
+    const { setUser, setToken } = useStateContext()
+    const [errors, setErrors] = useState(null)
+
+
+
     const onSubmit =(ev) =>{
         ev.preventDefault();
+        const payLoad = {
+            email: emailRef.current.value,
+            password: passwordRef.current.value,
+        }
+        axiosClient.post('login', payLoad)
+            .then(({ data }) => {
+                setUser(data.user);
+                setToken(data.token);
+                toast('🦄 Login Successfull ', {
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+            }).catch(err => {
+                const response = err.response;
+                if (response && response.status === 422) {
+                    if (response.data.errors){
+                        setErrors(response.data.errors)
+                    }else{
+                        setErrors({
+                            email: [response.data.message]
+                        })
+                    }
+                    toast('🦄 An Error has Occured ', {
+                        position: "top-center",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                        theme: "light",
+                    });
+                }
+            })
     }
 
   return (
@@ -17,17 +69,26 @@ export default function Login() {
                               Or
                               <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">start your 14-day free trial</a>
                           </p>
-                  </div>
+                  </div>.
+                  {errors &&
+                      <div className="">
+                          {Object.keys(errors).map(key => (
+                              <div key={key} class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative m-2" role="alert">
+                                  <span class="block sm:inline">{errors[key][0]}</span>
+                              </div>
+                          ))}
+                      </div>
+                  }
                   <form class="mt-8 space-y-6" onSubmit={onSubmit} method="POST">
                       <input type="hidden" name="remember" value="true"/>
                           <div class="-space-y-px rounded-md shadow-md">
                               <div>
                                   <label for="email-address" class="sr-only">Email address</label>
-                                  <input id="email-address" name="email" type="email" autocomplete="email" required class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Email address" />
+                              <input ref={emailRef} id="email-address" name="email" type="email" autocomplete="email" required class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Email address" />
                               </div>
                               <div>
                                   <label for="password" class="sr-only">Password</label>
-                                  <input id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Password" />
+                              <input ref={passwordRef} id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm" placeholder="Password" />
                               </div>
                           </div>
 
